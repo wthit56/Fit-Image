@@ -1,0 +1,94 @@
+<!doctype html><body>
+<form id="config">
+	<label for="width">Width: </label><input id="width" type="number" value="1920" />
+	<label for="height">Height: </label><input id="height" type="number" value="1080" />
+	<label for="cover">Cover: </label><input id="cover" type="checkbox" />
+	<label for="auto">Auto: </label><input id="auto" type="checkbox" checked />
+	<label for="input">Image(s): </label><input id="input" multiple type="file" />
+	<input value="Fit" type="submit" />
+</form>
+<div id="output"></div>
+<script type="text/javascript">
+
+var input = document.getElementById("input"),
+	cover = document.getElementById("cover"),
+	auto = document.getElementById("auto"),
+	width = document.getElementById("width"),
+	height = document.getElementById("height"),
+	output = document.getElementById("output");
+
+input.onchange = function() {
+	if (auto.checked) {
+		fit();
+	}
+};
+
+document.getElementById("config").onsubmit = function(e) {
+	e.preventDefault();
+	fit();
+};
+
+function fit() {
+	output.innerHTML = "";
+	console.log("fitting...");
+	Array.from(input.files).forEach(function(file) {
+		if (file.type.startsWith("image/")) {
+			console.log("loading " + file.name);
+			var fr = new FileReader();
+			fr.onload = function(e) { 
+				var img = new Image();
+				img.src = e.target.result;
+				img.file = file;
+				
+				requestAnimationFrame(function() {
+					console.log("rendering", file.name);
+					fit_image(img);
+				});
+			};
+			fr.readAsDataURL(file);
+		}
+	});
+}
+
+function fit_image(img) {
+	console.log("fitting " + img.file.name, img.width, img.height);
+	// document.body.appendChild(file.img);
+	
+	var img = img, ir = img.width / img.height;
+	var w = width.valueAsNumber, h = height.valueAsNumber, sr = w / h;
+	
+	var canvas = document.createElement("CANVAS"),
+		ctx = canvas.getContext("2d");
+	
+	// void ctx.drawImage(image, dx, dy, dWidth, dHeight);
+	
+	var nw, nh;
+	if (ir > sr) {
+		nw = w; nh = w / ir;
+		canvas.style.width = 200 + "px";
+	}
+	else if (ir < sr) {
+		nh = h; nw = h * ir;
+		canvas.style.height = 200 + "px";
+	}
+	else {
+		nw = w; nh = h;
+		canvas.style.width = 200 + "px";
+	}
+	
+	canvas.width = nw; canvas.height = nh;
+	canvas.title = img.file.name + ` [${nw|0},${nh|0}]`;
+	output.appendChild(canvas);
+	
+	ctx.drawImage(img, 0,0, nw,nh);
+}
+
+</script>
+
+
+
+
+
+
+
+
